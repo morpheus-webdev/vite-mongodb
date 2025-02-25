@@ -1,5 +1,5 @@
 import { Button, TextField } from '@mui/material';
-import { defaultNewUser, INewUser, newUserSchema } from '../util';
+import { defaultNewUser, INewUser, newUserSchema } from '../util/util';
 import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -14,9 +14,15 @@ export const RegisterComp = () => {
 		const isValid = await newUserSchema.isValid(newUser);
 		if (isValid) {
 			//TODO handle db interaction
-			let usersCopy = users as INewUser[];
-			usersCopy.push(newUser);
-			writeFile('../users.json', JSON.stringify(usersCopy), () => {});
+			fetch('localhost:5173/api/users', {
+				method: 'POST',
+				mode: 'cors',
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(newUser),
+			});
 			console.log('Succesful register');
 		} else {
 			console.error('Unsuccesful validation');
@@ -38,11 +44,13 @@ export const RegisterComp = () => {
 			/>
 			<TextField
 				required
+				type='password'
 				placeholder='Password...'
 				onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
 			/>
 			<TextField
 				required
+				type='email'
 				placeholder='Email...'
 				onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
 			/>

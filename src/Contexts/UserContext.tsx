@@ -1,7 +1,7 @@
 //TODO cuccok
 
 import { createContext, ReactNode, useState } from 'react';
-import { defaultUserSession, IUserSession } from '../util';
+import { defaultUserSession, IUserSession } from '../util/util';
 
 interface IUserContext {
 	userInfo: IUserSession;
