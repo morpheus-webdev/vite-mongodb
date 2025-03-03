@@ -35,16 +35,17 @@ export const AnimalContextProvider = ({
 }) => {
 	const [animals, setAnimals] = useState<IAnimal[]>([]);
 	async function initAnimals() {
-		let allAnimals = await fetch('127.0.0.1:5173/api/animals').then(
+		let allAnimals: IAnimal[] = await fetch('/api/animals').then(
 			(
 				data //TODO fix fetch
 			) => data.json()
 		);
 		console.log(allAnimals);
+
 		setAnimals(allAnimals);
 	}
 	function addAnimal(animal: IAnimal) {
-		//TODO
+		console.log(animal);
 	}
 	function likeAnimal(interaction: boolean) {
 		//TODO
