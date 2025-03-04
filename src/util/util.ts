@@ -34,3 +34,7 @@ export const defaultAnimal: IAnimal = {
 	dislike: 0
 
 }
+
+export interface MyResponse {
+	message: "Saved" | "Error"
+}

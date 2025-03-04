@@ -5,23 +5,45 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import {
 	Button,
+	Dialog,
 	MenuItem,
+	Modal,
 	Select,
 	SelectChangeEvent,
+	Snackbar,
 	TextField,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const Animals = () => {
 	const { initAnimals, animals } = useContext(AnimalContext);
 	useEffect(() => {
 		initAnimals();
 	}, []);
+	const [searchParam, setSearchParam] = useState<string>('');
+	async function handleSearch() {
+		let res = await fetch('/api/animals/search', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/text',
+			},
+			body: searchParam,
+		});
+		console.log(res);
+	}
 	return (
-		<div className='flex flex-row flex-wrap gap-4'>
-			{animals.map((a) => {
-				return <Animal key={`animal-${a.animalia}`} animal={a} />;
-			})}
-		</div>
+		<>
+			<TextField
+				placeholder='Search animal by name...'
+				onChange={(e) => setSearchParam(e.target.value)}
+			/>
+			<Button onClick={handleSearch}>Search</Button>
+			<div className='flex flex-row flex-wrap gap-4'>
+				{animals.map((a) => {
+					return <Animal key={`animal-${a.animalia}`} animal={a} />;
+				})}
+			</div>
+		</>
 	);
 };
 export default Animals;
@@ -46,37 +68,40 @@ export const Animal = (props: { animal: IAnimal }) => {
 				break;
 		}
 	};
-	return (
-		<div
-			className='w-[400px] h-[632px] bg-amber-500 rounded-2xl flex flex-col flex-nowrap items-center'
-			style={{ background: getCardColor(props.animal.class) }}>
-			<h1 className='text-3xl mb-0 bg-amber-200 w-full text-center mt-6'>
-				<a href={url} target='_blank'>
-					{name}
-				</a>
-			</h1>
-			<h2 className='text-2xl mt-0 bg-amber-200 w-full text-center mb-6'>
-				{animalia}
-			</h2>
-			<img src={img} className='w-full aspect-video object-cover' />
-			<h2 className='text-xl mb-0 bg-amber-200 w-full text-center'>
-				{props.animal.class}
-			</h2>
-			<h2 className='text-xl mt-0 bg-amber-200 w-full text-center mb-6'>
-				{biome}
-			</h2>
-			<h1 className='text-4xl font-black'>Legs: {legs}</h1>
-			<h1 className='text-4xl'>{isPredator ? 'Predator' : 'Herbivore'}</h1>
 
-			<div className='w-full h-20 flex flex-row flex-nowrap'>
-				<button className='w-1/2'>
-					<ThumbUpIcon /> {like}
-				</button>
-				<button className='w-1/2'>
-					<ThumbDownIcon /> {dislike}
-				</button>
+	return (
+		<>
+			<div
+				className='w-[400px] h-[632px] bg-amber-500 rounded-2xl flex flex-col flex-nowrap items-center'
+				style={{ background: getCardColor(props.animal.class) }}>
+				<h1 className='text-3xl mb-0 bg-amber-200 w-full text-center mt-6'>
+					<a href={url} target='_blank'>
+						{name}
+					</a>
+				</h1>
+				<h2 className='text-2xl mt-0 bg-amber-200 w-full text-center mb-6'>
+					{animalia}
+				</h2>
+				<img src={img} className='w-full aspect-video object-cover' />
+				<h2 className='text-xl mb-0 bg-amber-200 w-full text-center'>
+					{props.animal.class}
+				</h2>
+				<h2 className='text-xl mt-0 bg-amber-200 w-full text-center mb-6'>
+					{biome}
+				</h2>
+				<h1 className='text-4xl font-black'>Legs: {legs}</h1>
+				<h1 className='text-4xl'>{isPredator ? 'Predator' : 'Herbivore'}</h1>
+
+				<div className='w-full h-20 flex flex-row flex-nowrap'>
+					<button className='w-1/2'>
+						<ThumbUpIcon /> {like}
+					</button>
+					<button className='w-1/2'>
+						<ThumbDownIcon /> {dislike}
+					</button>
+				</div>
 			</div>
-		</div>
+		</>
 	);
 };
 
@@ -123,53 +148,77 @@ export const NewAnimal = () => {
 	function changeBiome(e: SelectChangeEvent) {
 		changeKey(e.target.value, 'biome');
 	}
+	const [open, setOpen] = useState<boolean>(false);
+	const navigate = useNavigate();
 
-	function handleRegister() {
-		addAnimal(newAnimal);
+	async function handleRegister() {
+		let res = await addAnimal(newAnimal);
+		if (res.status === 201) {
+			console.log('Saved');
+			setOpen(true);
+			setTimeout(() => {
+				setOpen(false);
+			}, 2500);
+			setTimeout(() => {
+				navigate('/');
+			}, 3500);
+		}
 	}
 
 	return (
-		<div>
-			<Select value={newAnimal.class} onChange={changeClass}>
-				<MenuItem value='Mammals'>Mammals</MenuItem>
-				<MenuItem value='Fish'>Fish</MenuItem>
-				<MenuItem value='Reptiles'>Reptiles</MenuItem>
-				<MenuItem value='Birds'>Birds</MenuItem>
-			</Select>
-			<Select value={newAnimal.biome} onChange={changeBiome}>
-				<MenuItem value='Marine'>Marine</MenuItem>
-				<MenuItem value='Freshwater'>Freshwater</MenuItem>
-				<MenuItem value='Desert'>Desert</MenuItem>
-				<MenuItem value='Forest'>Forest</MenuItem>
-				<MenuItem value='Savanna'>Savanna</MenuItem>
-				<MenuItem value='Tundra'>Tundra</MenuItem>
-				<MenuItem value='Arctic'>Arctic</MenuItem>
-			</Select>
-			<TextField
-				placeholder='Name...'
-				onChange={(e) => changeKey(e.target.value, 'name')}
-			/>
-			<TextField
-				placeholder='Animalia...'
-				onChange={(e) => changeKey(e.target.value, 'animalia')}
-			/>
-			<TextField
-				placeholder='Number of legs...'
-				type='number'
-				onChange={(e) => changeKey(e.target.value, 'legs')}
-			/>
-			<TextField
-				placeholder='Image url...'
-				onChange={(e) => changeKey(e.target.value, 'img')}
-			/>
-			<TextField
-				placeholder='Wikipedia url...'
-				onChange={(e) => changeKey(e.target.value, 'url')}
-			/>
-			{
-				//TODO add predator
-			}
-			<Button onClick={handleRegister}>Register new animal</Button>
-		</div>
+		<>
+			<Snackbar
+				className='flex flex-col flex-nowrap justify-center items-center'
+				autoHideDuration={2000}
+				open={open}
+				onClose={() => setOpen(false)}>
+				<div className=' p-8 rounded-2xl border-green-400 border-8 bg-black'>
+					<h1 className='text-6xl text-white'>New animal is saved</h1>
+				</div>
+			</Snackbar>
+			<Button onClick={() => setOpen(true)}>Open Modal</Button>
+			<div className='flex flex-col flex-nowrap w-full h-full items-center gap-4'>
+				<Select value={newAnimal.class} onChange={changeClass}>
+					<MenuItem value='Mammals'>Mammals</MenuItem>
+					<MenuItem value='Fish'>Fish</MenuItem>
+					<MenuItem value='Reptiles'>Reptiles</MenuItem>
+					<MenuItem value='Birds'>Birds</MenuItem>
+				</Select>
+				<Select value={newAnimal.biome} onChange={changeBiome}>
+					<MenuItem value='Marine'>Marine</MenuItem>
+					<MenuItem value='Freshwater'>Freshwater</MenuItem>
+					<MenuItem value='Desert'>Desert</MenuItem>
+					<MenuItem value='Forest'>Forest</MenuItem>
+					<MenuItem value='Savanna'>Savanna</MenuItem>
+					<MenuItem value='Tundra'>Tundra</MenuItem>
+					<MenuItem value='Arctic'>Arctic</MenuItem>
+				</Select>
+				<TextField
+					placeholder='Name...'
+					onChange={(e) => changeKey(e.target.value, 'name')}
+				/>
+				<TextField
+					placeholder='Animalia...'
+					onChange={(e) => changeKey(e.target.value, 'animalia')}
+				/>
+				<TextField
+					placeholder='Number of legs...'
+					type='number'
+					onChange={(e) => changeKey(e.target.value, 'legs')}
+				/>
+				<TextField
+					placeholder='Image url...'
+					onChange={(e) => changeKey(e.target.value, 'img')}
+				/>
+				<TextField
+					placeholder='Wikipedia url...'
+					onChange={(e) => changeKey(e.target.value, 'url')}
+				/>
+				{
+					//TODO add predator
+				}
+				<Button onClick={handleRegister}>Register new animal</Button>
+			</div>
+		</>
 	);
 };

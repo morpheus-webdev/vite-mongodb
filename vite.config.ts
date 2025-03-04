@@ -19,27 +19,34 @@ async function connectToAnimalsDb() {
     console.log(e)
   }
 }
-async function getAllAnimals(){
+connectToAnimalsDb();
+const animalSchema = new mongoose.Schema({
+  class: String,
+  biome: String,
+  name: String,
+  animalia: String,
+  legs: Number,
+  isPredator: Boolean,
+  img: String,
+  url: String,
+  like: Number,
+  dislike: Number
+})
+
+if(mongoose.modelNames().includes('animal')){
+  mongoose.deleteModel('animal')
+}
+let AnimalModel = mongoose.model('animal', animalSchema)
+
+async function getAnimals(searchParams: string = ""){
   try{
-    await connectToAnimalsDb();
-    const animalSchema = new mongoose.Schema({
-      class: String,
-      biome: String,
-      name: String,
-      animalia: String,
-      legs: Number,
-      isPredator: Boolean,
-      img: String,
-      url: String,
-      like: Number,
-      dislike: Number
-    })
     let allAnimals;
-    if(mongoose.modelNames().includes('animal')){
-      mongoose.deleteModel('animal')
+    if(!searchParams){
+      allAnimals = await AnimalModel.find({})
     }
-    let AnimalModel = mongoose.model('animal', animalSchema)//TODO collection?
-    allAnimals = await AnimalModel.find({})
+    else {
+      allAnimals = await AnimalModel.find({name: searchParams})
+    }
 
     return allAnimals;
 
@@ -49,9 +56,31 @@ async function getAllAnimals(){
 }
 app.get('/api/animals', async (req: Request, res: Response) => {
   try{
-    let allAnimals = await getAllAnimals();
+    let allAnimals = await getAnimals();
     res.status(200).json(allAnimals)
   }catch(e){console.log(e)}
+})
+app.post('/api/animals/search', async (req: Request, res: Response) => {
+  try{
+    let name = req.body.name;
+    let animals = await getAnimals(name)
+    res.status(200).json(animals)
+  }catch(e){
+    console.error(e)
+  }
+})
+
+app.post('/api/new-animal', async (req: Request, res: Response) => {
+  try{
+    let animal = req.body;
+    let newAnimal = new AnimalModel(animal);
+    newAnimal.save();
+    console.log('New animal is succesfully saved');
+    res.status(201).send({message: "Saved"})
+  }catch(e){ 
+    res.status(500).send({message: "Internal server error"})
+    console.error(e);
+  }
 })
 
 function expressPlugin() {
